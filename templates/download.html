@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Download — LogCenter{% endblock %}
+{% block body %}
+<div class="app-shell">
+  <header class="app-header">
+    <img class="app-logo" src="{{ url_for('static', filename='img/dreambricks-horizontal-onlight.svg') }}" alt="DreamBricks">
+    <h1 class="app-header-title">LogCenter Download</h1>
+    <a class="btn btn-ghost" href="{{ url_for('logout') }}"><i data-lucide="log-out"></i> Sair</a>
+  </header>
+
+  <main class="app-main">
+    <section class="editor-column">
+      <div class="card datepicker-card">
+        <div class="datepicker-toggle">
+          <button type="button" class="btn btn-secondary btn-sm" id="mode-single">Dia único</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="mode-range">Intervalo</button>
+        </div>
+        <div class="datepicker-fields">
+          <label class="field">
+            <span class="field-label" id="date-start-label">Data</span>
+            <input class="input" type="date" id="date-start">
+          </label>
+          <label class="field" id="date-end-field" hidden>
+            <span class="field-label">Até</span>
+            <input class="input" type="date" id="date-end">
+          </label>
+          <button type="button" class="btn btn-primary btn-sm" id="apply-date">Aplicar data</button>
+        </div>
+        <p class="form-error" id="datepicker-error" hidden></p>
+      </div>
+
+      <div class="card editor-card">
+        <label class="field-label" for="pipeline-editor">Aggregation pipeline</label>
+        <textarea id="pipeline-editor" class="pipeline-editor" spellcheck="false">{{ example_pipeline }}</textarea>
+        <p class="form-error" id="run-error" hidden></p>
+        <div class="editor-actions">
+          <button type="button" class="btn btn-primary" id="run-btn"><i data-lucide="play"></i> Executar</button>
+          <button type="button" class="btn btn-secondary" id="favorite-btn"><i data-lucide="star"></i> Favoritar</button>
+          <span class="download-group">
+            <button type="button" class="btn btn-ghost" id="download-csv" disabled>CSV</button>
+            <button type="button" class="btn btn-ghost" id="download-xlsx" disabled>Excel</button>
+            <button type="button" class="btn btn-ghost" id="download-json" disabled>JSON</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="card preview-card">
+        <div class="preview-header">
+          <h2 class="preview-title">Resultado</h2>
+          <span class="tag" id="result-count">0 linhas</span>
+        </div>
+        <div class="preview-table-wrap" id="preview-table-wrap">
+          <p class="empty-state">Rode uma aggregation para ver o resultado aqui.</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="favorites-column">
+      <div class="card favorites-card">
+        <h2 class="preview-title">Favoritos</h2>
+        <ul class="favorites-list" id="favorites-list"></ul>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="dialog-overlay" id="favorite-dialog-overlay" hidden>
+  <div class="dialog card">
+    <h2 class="preview-title">Favoritar aggregation</h2>
+    <label class="field">
+      <span class="field-label">Nome</span>
+      <input class="input" type="text" id="favorite-name" placeholder="Ex: Retiradas do dia">
+    </label>
+    <p class="form-error" id="favorite-error" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="favorite-cancel">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="favorite-save">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/datepicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/favorites.js') }}"></script>
+{% endblock %}
