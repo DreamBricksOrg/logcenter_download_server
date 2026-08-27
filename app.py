@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from bson import json_util
 from flask import Flask, Response, jsonify, redirect, render_template, request, session, url_for
@@ -9,6 +10,9 @@ from services import favorites as favorites_service
 from services.export import to_csv_bytes, to_json_bytes, to_xlsx_bytes
 from services.mongo_client import MongoConnectionError, run_aggregation
 from services.pipeline_parser import PipelineParseError, parse
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -54,16 +58,22 @@ def _extract_columns(rows):
     return columns
 
 
+def _json_safe(value):
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, datetime.datetime):
+        return value
+    if isinstance(value, (dict, list)):
+        return json_util.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
 def _stringify_rows(rows, columns):
     stringified = []
     for row in rows:
         record = {}
         for col in columns:
-            value = row.get(col, "")
-            if isinstance(value, (dict, list)):
-                record[col] = json_util.dumps(value, ensure_ascii=False)
-            else:
-                record[col] = value
+            record[col] = _json_safe(row.get(col, ""))
         stringified.append(record)
     return stringified
 
@@ -105,12 +115,18 @@ def download_page():
 def api_run():
     payload = request.get_json(silent=True) or {}
     pipeline_text = payload.get("pipeline", "")
+    logger.info("api_run: received pipeline text (%d chars)", len(pipeline_text))
+    logger.debug("api_run: raw pipeline text:\n%s", pipeline_text)
     try:
         stages = parse(pipeline_text)
+        logger.info("api_run: parsed %d stage(s): %s", len(stages), json_util.dumps(stages))
         rows = run_aggregation(stages)
+        logger.info("api_run: aggregation returned %d row(s)", len(rows))
     except PipelineParseError as exc:
+        logger.warning("api_run: pipeline parse error: %s", exc)
         return jsonify({"error": str(exc)}), 400
     except MongoConnectionError as exc:
+        logger.error("api_run: MongoDB connection error: %s", exc, exc_info=True)
         return jsonify({"error": str(exc)}), 502
 
     columns = _extract_columns(rows)
@@ -126,12 +142,16 @@ def api_run():
 def download_file(fmt):
     payload = request.get_json(silent=True) or {}
     pipeline_text = payload.get("pipeline", "")
+    logger.info("download_file(%s): received pipeline text (%d chars)", fmt, len(pipeline_text))
     try:
         stages = parse(pipeline_text)
         rows = run_aggregation(stages)
+        logger.info("download_file(%s): aggregation returned %d row(s)", fmt, len(rows))
     except PipelineParseError as exc:
+        logger.warning("download_file(%s): pipeline parse error: %s", fmt, exc)
         return jsonify({"error": str(exc)}), 400
     except MongoConnectionError as exc:
+        logger.error("download_file(%s): MongoDB connection error: %s", fmt, exc, exc_info=True)
         return jsonify({"error": str(exc)}), 502
 
     filename_base = f"logcenter_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
