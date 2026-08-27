@@ -50,6 +50,7 @@
     setRunError(null);
     setDownloadsEnabled(false);
     runBtn.disabled = true;
+    tableWrap.innerHTML = '<div class="loader-wrap"><span class="loader"></span></div>';
     try {
       const response = await fetch('/api/run', {
         method: 'POST',
@@ -68,6 +69,8 @@
       setDownloadsEnabled(data.count > 0);
     } catch (err) {
       setRunError('Erro de rede ao executar a aggregation.');
+      resultCount.textContent = '0 linhas';
+      tableWrap.innerHTML = '<p class="empty-state">Rode uma aggregation para ver o resultado aqui.</p>';
     } finally {
       runBtn.disabled = false;
     }
