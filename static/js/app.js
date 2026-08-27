@@ -9,6 +9,12 @@
     xlsx: document.getElementById('download-xlsx'),
     json: document.getElementById('download-json'),
   };
+  const downloadDateOverlay = document.getElementById('download-date-dialog-overlay');
+  const downloadDateInfo = document.getElementById('download-date-info');
+  const downloadDateCancelBtn = document.getElementById('download-date-cancel');
+  const downloadDateTodayBtn = document.getElementById('download-date-today');
+  const downloadDatePipelineBtn = document.getElementById('download-date-pipeline');
+  let pendingDownloadFormat = null;
 
   function setRunError(message) {
     if (message) {
@@ -67,7 +73,39 @@
     }
   }
 
-  async function downloadFormat(fmt) {
+  function extractPipelineDate() {
+    const text = editor.value;
+    const singleMatch = text.match(/\$regex:\s*"\^(\d{4}-\d{2}-\d{2})/);
+    if (singleMatch) return singleMatch[1];
+    const rangeMatch = text.match(/\$gte:\s*ISODate\("(\d{4}-\d{2}-\d{2})/);
+    if (rangeMatch) return rangeMatch[1];
+    return null;
+  }
+
+  function todayDateStr() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function openDownloadDateDialog(fmt) {
+    pendingDownloadFormat = fmt;
+    const pipelineDate = extractPipelineDate();
+    downloadDatePipelineBtn.disabled = !pipelineDate;
+    downloadDateInfo.textContent = pipelineDate
+      ? `Data encontrada no aggregation: ${pipelineDate}`
+      : 'Não encontrei uma data no aggregation.';
+    downloadDateOverlay.hidden = false;
+  }
+
+  function closeDownloadDateDialog() {
+    downloadDateOverlay.hidden = true;
+    pendingDownloadFormat = null;
+  }
+
+  async function downloadFormat(fmt, dateStr) {
     setRunError(null);
     try {
       const response = await fetch(`/download/${fmt}`, {
@@ -81,9 +119,7 @@
         return;
       }
       const blob = await response.blob();
-      const disposition = response.headers.get('Content-Disposition') || '';
-      const match = disposition.match(/filename="([^"]+)"/);
-      const filename = match ? match[1] : `logcenter.${fmt}`;
+      const filename = `logcenter_${dateStr}.${fmt}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -98,9 +134,24 @@
   }
 
   runBtn.addEventListener('click', runPipeline);
-  downloadButtons.csv.addEventListener('click', () => downloadFormat('csv'));
-  downloadButtons.xlsx.addEventListener('click', () => downloadFormat('xlsx'));
-  downloadButtons.json.addEventListener('click', () => downloadFormat('json'));
+  downloadButtons.csv.addEventListener('click', () => openDownloadDateDialog('csv'));
+  downloadButtons.xlsx.addEventListener('click', () => openDownloadDateDialog('xlsx'));
+  downloadButtons.json.addEventListener('click', () => openDownloadDateDialog('json'));
+
+  downloadDateCancelBtn.addEventListener('click', closeDownloadDateDialog);
+
+  downloadDateTodayBtn.addEventListener('click', () => {
+    const fmt = pendingDownloadFormat;
+    closeDownloadDateDialog();
+    downloadFormat(fmt, todayDateStr());
+  });
+
+  downloadDatePipelineBtn.addEventListener('click', () => {
+    const fmt = pendingDownloadFormat;
+    const pipelineDate = extractPipelineDate();
+    closeDownloadDateDialog();
+    downloadFormat(fmt, pipelineDate || todayDateStr());
+  });
 
   window.LogCenter = {
     getPipelineText: () => editor.value,

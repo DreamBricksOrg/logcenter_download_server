@@ -53,6 +53,25 @@
     return `timestamp: { $gte: ISODate("${start}T00:00:00Z"), $lt: ISODate("${endExclusive}T00:00:00Z") }`;
   }
 
+  function findBlockEndLine(lines, startIndex) {
+    let depth = 0;
+    let started = false;
+    for (let i = startIndex; i < lines.length; i++) {
+      for (const ch of lines[i]) {
+        if (ch === '{') {
+          depth++;
+          started = true;
+        } else if (ch === '}') {
+          depth--;
+        }
+      }
+      if (started && depth <= 0) {
+        return i;
+      }
+    }
+    return startIndex;
+  }
+
   function applyToEditor(clause) {
     const editor = document.getElementById('pipeline-editor');
     const lines = editor.value.split('\n');
@@ -63,7 +82,9 @@
     if (lineIndex !== -1) {
       const indentMatch = lines[lineIndex].match(/^\s*/);
       const indent = indentMatch ? indentMatch[0] : '      ';
-      lines[lineIndex] = `${indent}${clause},`;
+      const endLineIndex = findBlockEndLine(lines, lineIndex);
+      const hadTrailingComma = /,\s*$/.test(lines[endLineIndex]);
+      lines.splice(lineIndex, endLineIndex - lineIndex + 1, `${indent}${clause}${hadTrailingComma ? ',' : ''}`);
       editor.value = lines.join('\n');
       return true;
     }
