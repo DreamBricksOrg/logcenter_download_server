@@ -113,7 +113,7 @@ body {
   .app-main { grid-template-columns: 1fr; }
 }
 
-.editor-column { display: flex; flex-direction: column; gap: var(--space-6); }
+.editor-column { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 
 .datepicker-card { display: flex; flex-direction: column; gap: var(--space-4); }
 .datepicker-toggle { display: flex; gap: var(--space-2); }
@@ -136,7 +136,7 @@ body {
 .editor-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .download-group { display: inline-flex; gap: var(--space-2); margin-left: auto; }
 
-.preview-card { display: flex; flex-direction: column; gap: var(--space-4); }
+.preview-card { display: flex; flex-direction: column; gap: var(--space-4); overflow-x: auto;}
 .preview-header { display: flex; align-items: center; justify-content: space-between; }
 .preview-title { font-size: var(--text-md); font-weight: var(--weight-semibold); margin: 0; }
 .preview-table-wrap { overflow: auto; max-height: 480px; }

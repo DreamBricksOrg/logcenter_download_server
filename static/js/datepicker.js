@@ -50,7 +50,7 @@
       return null;
     }
     const endExclusive = nextDay(end);
-    return `timestamp: { $gte: "${start}T00:00:00Z", $lt: "${endExclusive}T00:00:00Z" }`;
+    return `timestamp: { $gte: "${start}", $lt: "${endExclusive}" }`;
   }
 
   function findBlockEndLine(lines, startIndex) {
