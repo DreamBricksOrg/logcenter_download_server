@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Entrar — LogCenter Download{% endblock %}
+{% block body %}
+<main class="auth-page">
+  <div class="card auth-card">
+    <img class="auth-logo" src="{{ url_for('static', filename='img/dreambricks-horizontal-onlight.svg') }}" alt="DreamBricks">
+    <h1 class="auth-title">LogCenter Download</h1>
+    <p class="auth-subtitle">Entre para rodar aggregations e baixar resultados.</p>
+    <form method="post" class="auth-form">
+      <label class="field">
+        <span class="field-label">Usuário</span>
+        <input class="input" type="text" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label class="field">
+        <span class="field-label">Senha</span>
+        <input class="input" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      {% if error %}
+        <p class="form-error">{{ error }}</p>
+      {% endif %}
+      <button class="btn btn-primary btn-lg" type="submit" style="width: 100%;">Entrar</button>
+    </form>
+  </div>
+</main>
+{% endblock %}
