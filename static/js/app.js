@@ -77,7 +77,7 @@
     const text = editor.value;
     const singleMatch = text.match(/\$regex:\s*"\^(\d{4}-\d{2}-\d{2})/);
     if (singleMatch) return singleMatch[1];
-    const rangeMatch = text.match(/\$gte:\s*ISODate\("(\d{4}-\d{2}-\d{2})/);
+    const rangeMatch = text.match(/\$gte:\s*(?:ISODate\()?"(\d{4}-\d{2}-\d{2})/);
     if (rangeMatch) return rangeMatch[1];
     return null;
   }
