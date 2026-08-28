@@ -1,0 +1,11 @@
+.venv
+.git
+__pycache__
+*.pyc
+.pytest_cache
+design_system
+docs
+tests
+favorites/*.json
+.env
+start.ps1
